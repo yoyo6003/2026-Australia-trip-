@@ -1232,10 +1232,10 @@
         // 今日 AUD to TWD 參考匯率
         const AUD_TO_TWD_RATE = 22.67;
 
-        // Apps Script 最新部署網址
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxEHbhj08yYmQKVqrRg0MgpvV-cdugeGMQm9--yJyzH05XlY0YJGE9_TSYFQ54psneRg/exec';
+        // 最新部署的 Google Apps Script 網址
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyw9dgsb_QsInMARMKmXgzvivrYCIgyq2Ni_WuSnF1DCXUris9KUQTopjOd4rw2q2BE0A/exec';
 
-        // 核心修復：強制將帶有 ISO 時間的日期格式（如 2026-09-17T16:00:00.000Z）轉換截取為純 YYYY-MM-DD
+        // 日期格式化：強制切除 T 後的時間
         function formatDateString(dateStr) {
             if (!dateStr) return '';
             let str = String(dateStr).trim();
@@ -1246,13 +1246,11 @@
             return match ? match[0] : str;
         }
 
-
         // 1. 搜尋過濾功能
         const searchInput = document.getElementById('searchInput');
         const dayCards = document.querySelectorAll('.day-card');
         const noResults = document.getElementById('noResults');
         const searchTermText = document.getElementById('searchTermText');
-
 
         searchInput.addEventListener('input', function () {
             const query = this.value.trim().toLowerCase();
@@ -1260,7 +1258,6 @@
 
             dayCards.forEach(card => {
                 const text = card.textContent.toLowerCase();
-
                 if (text.includes(query)) {
                     card.classList.remove('hidden');
                     if (query !== '') {
@@ -1281,7 +1278,7 @@
         });
 
 
-        // 2. 雙 Tab 記帳本（個人 Local / 公費 Google API）
+        // 2. 雙 Tab 記帳本
         let currentTab = 'personal';
 
         let personalExpenses =
@@ -1345,12 +1342,12 @@
             `;
 
             try {
-                const res = await fetch(GOOGLE_SCRIPT_URL);
+                const res = await fetch(GOOGLE_SCRIPT_URL, { redirect: 'follow' });
                 const data = await res.json();
 
                 if (Array.isArray(data)) {
                     groupExpenses = data.map(item => ({
-                        id: item.id,
+                        id: String(item.id),
                         date: formatDateString(item.date),
                         title: item.title,
                         amount: parseFloat(item.amount) || 0
@@ -1410,7 +1407,6 @@
             }
 
             const totalTwd = Math.round(totalAud * AUD_TO_TWD_RATE);
-
             totalAmountAudEl.textContent = totalAud.toFixed(2);
             totalAmountTwdEl.textContent = totalTwd.toLocaleString();
 
@@ -1420,7 +1416,7 @@
         }
 
 
-        // 新增記帳 (保持原本可運作的 fetch 發送方式)
+        // 新增記帳
         expenseForm.addEventListener('submit', async function (e) {
             e.preventDefault();
 

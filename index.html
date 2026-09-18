@@ -1232,88 +1232,55 @@
         // 今日 AUD to TWD 參考匯率
         const AUD_TO_TWD_RATE = 22.67;
 
-        // 已自動帶入您最新發佈的 Google Apps Script Web App 網址
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxyG86b4z-eETDQ6WdK5oYSr9IlIbDgowreeKfUd9a2Bu0tTA1JsS-0h3qBcshjzxXQdw/exec';
+        // 已為您更新為最新的 Google Apps Script 部署網址
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxEHbhj08yYmQKVqrRg0MgpvV-cdugeGMQm9--yJyzH05XlY0YJGE9_TSYFQ54psneRg/exec';
 
-        // 輔助函式：強制轉成 YYYY-MM-DD 純日期格式
+        // 輔助函式：格式化日期為 YYYY-MM-DD
         function formatDateString(dateStr) {
             if (!dateStr) return '';
             let str = String(dateStr).trim();
-            // 如果帶有時間字串（如 2026-09-17T16:00:00.000Z），截取 T 前面的日期
             if (str.includes('T')) {
                 str = str.split('T')[0];
             }
-            // 正則抓取 YYYY-MM-DD 格式
             const match = str.match(/^\d{4}-\d{2}-\d{2}/);
             return match ? match[0] : str;
         }
 
-        // =========================
         // 1. 搜尋過濾功能
-        // =========================
-
         const searchInput = document.getElementById('searchInput');
         const dayCards = document.querySelectorAll('.day-card');
         const noResults = document.getElementById('noResults');
         const searchTermText = document.getElementById('searchTermText');
 
-
         searchInput.addEventListener('input', function () {
-
             const query = this.value.trim().toLowerCase();
-
             let hasMatch = false;
 
-
             dayCards.forEach(card => {
-
                 const text = card.textContent.toLowerCase();
-
-
                 if (text.includes(query)) {
-
                     card.classList.remove('hidden');
-
-
                     if (query !== '') {
                         card.setAttribute('open', '');
                     }
-
-
                     hasMatch = true;
-
                 } else {
-
                     card.classList.add('hidden');
-
                 }
-
             });
 
-
             if (!hasMatch && query !== '') {
-
                 noResults.classList.remove('hidden');
-
                 searchTermText.textContent = this.value;
-
             } else {
-
                 noResults.classList.add('hidden');
-
             }
-
         });
 
 
-        // =========================
-        // 2. 雙 Tab 記帳本（個人 Local / 公費 Google API）
-        // =========================
-
+        // 2. 雙 Tab 記帳本
         let currentTab = 'personal';
 
-
-        // 個人記帳保存在本機 localStorage (私密)
         let personalExpenses =
             JSON.parse(localStorage.getItem('aus_expenses_personal')) ||
             [
@@ -1325,11 +1292,8 @@
                 }
             ];
 
-
-        // 公費記帳快取（將從雲端 Google 試算表同步）
         let groupExpenses = [];
         let isLoadingGroup = false;
-
 
         const tabPersonal = document.getElementById('tabPersonal');
         const tabGroup = document.getElementById('tabGroup');
@@ -1348,50 +1312,26 @@
         const totalLabel = document.getElementById('totalLabel');
 
 
-        // =========================
         // 切換 Tab
-        // =========================
-
         window.switchTab = async function (type) {
-
             currentTab = type;
 
-
             if (type === 'personal') {
-
-                tabPersonal.className =
-                    "text-xs font-bold px-3 py-1.5 rounded-lg transition border border-sky-600 bg-sky-600 text-white";
-
-                tabGroup.className =
-                    "text-xs font-bold px-3 py-1.5 rounded-lg transition border border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200";
-
+                tabPersonal.className = "text-xs font-bold px-3 py-1.5 rounded-lg transition border border-sky-600 bg-sky-600 text-white";
+                tabGroup.className = "text-xs font-bold px-3 py-1.5 rounded-lg transition border border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200";
                 totalLabel.textContent = "個人總計";
-
                 renderExpenses();
-
             } else {
-
-                tabGroup.className =
-                    "text-xs font-bold px-3 py-1.5 rounded-lg transition border border-sky-600 bg-sky-600 text-white";
-
-                tabPersonal.className =
-                    "text-xs font-bold px-3 py-1.5 rounded-lg transition border border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200";
-
+                tabGroup.className = "text-xs font-bold px-3 py-1.5 rounded-lg transition border border-sky-600 bg-sky-600 text-white";
+                tabPersonal.className = "text-xs font-bold px-3 py-1.5 rounded-lg transition border border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200";
                 totalLabel.textContent = "公費總計";
-
                 await fetchGroupExpenses();
-
             }
-
         };
 
 
-        // =========================
-        // 從 Google 試算表讀取公費資料
-        // =========================
-
+        // 從 Google 試算表讀取資料
         async function fetchGroupExpenses() {
-
             isLoadingGroup = true;
             expenseList.innerHTML = `
                 <tr>
@@ -1419,263 +1359,132 @@
                 isLoadingGroup = false;
                 renderExpenses();
             }
-
         }
 
 
-        // =========================
         // 渲染記帳列表
-        // =========================
-
         function renderExpenses() {
-
             expenseList.innerHTML = '';
-
             let totalAud = 0;
 
             const currentList = currentTab === 'personal' ? personalExpenses : groupExpenses;
-
 
             if (isLoadingGroup && currentTab === 'group') {
                 return;
             }
 
-
             if (currentList.length === 0) {
-
                 expenseList.innerHTML = `
-
                     <tr>
-
-                        <td colspan="5"
-                            class="py-4 text-center text-slate-400">
-
-                            目前尚無
-                            ${currentTab === 'personal' ? '個人' : '公費'}
-                            記帳紀錄
-
+                        <td colspan="5" class="py-4 text-center text-slate-400">
+                            目前尚無 ${currentTab === 'personal' ? '個人' : '公費'} 記帳紀錄
                         </td>
-
                     </tr>
-
                 `;
-
             } else {
-
                 currentList.forEach(item => {
-
                     const aud = parseFloat(item.amount) || 0;
-
                     const twd = Math.round(aud * AUD_TO_TWD_RATE);
-
                     totalAud += aud;
 
                     const displayDate = formatDateString(item.date);
-
                     const tr = document.createElement('tr');
-
                     tr.className = 'border-b border-slate-100 hover:bg-slate-50/50';
 
-
                     tr.innerHTML = `
-
-                        <td class="py-2 px-2 whitespace-nowrap text-slate-500">
-                            ${displayDate}
-                        </td>
-
-                        <td class="py-2 px-2 font-medium text-slate-800">
-                            ${item.title}
-                        </td>
-
-                        <td class="py-2 px-2 text-right font-semibold text-slate-700">
-                            $${aud.toFixed(2)}
-                        </td>
-
-                        <td class="py-2 px-2 text-right text-emerald-600 font-medium">
-                            NT$ ${twd.toLocaleString()}
-                        </td>
-
+                        <td class="py-2 px-2 whitespace-nowrap text-slate-500">${displayDate}</td>
+                        <td class="py-2 px-2 font-medium text-slate-800">${item.title}</td>
+                        <td class="py-2 px-2 text-right font-semibold text-slate-700">$${aud.toFixed(2)}</td>
+                        <td class="py-2 px-2 text-right text-emerald-600 font-medium">NT$ ${twd.toLocaleString()}</td>
                         <td class="py-2 px-2 text-center">
-
-                            <button
-                                onclick="deleteExpense('${item.id}')"
-                                class="text-rose-400 hover:text-rose-600 transition"
-                                title="刪除"
-                            >
-                                🗑️
-                            </button>
-
+                            <button onclick="deleteExpense('${item.id}')" class="text-rose-400 hover:text-rose-600 transition" title="刪除">🗑️</button>
                         </td>
-
                     `;
-
-
                     expenseList.appendChild(tr);
-
                 });
-
             }
-
 
             const totalTwd = Math.round(totalAud * AUD_TO_TWD_RATE);
-
-
             totalAmountAudEl.textContent = totalAud.toFixed(2);
-
             totalAmountTwdEl.textContent = totalTwd.toLocaleString();
 
-
-            // 個人記帳寫入本機 localStorage
             if (currentTab === 'personal') {
-                localStorage.setItem(
-                    'aus_expenses_personal',
-                    JSON.stringify(personalExpenses)
-                );
+                localStorage.setItem('aus_expenses_personal', JSON.stringify(personalExpenses));
             }
-
         }
 
 
-        // =========================
-        // 新增記帳
-        // =========================
-
+        // 新增記帳 (使用 text/plain 防止 CORS 預檢攔截)
         expenseForm.addEventListener('submit', async function (e) {
-
             e.preventDefault();
 
-
             const newExpense = {
-
                 id: Date.now().toString(),
-
                 date: formatDateString(expenseDate.value),
-
                 title: expenseTitle.value.trim(),
-
                 amount: parseFloat(expenseAmount.value)
-
             };
 
-
             if (currentTab === 'personal') {
-
                 personalExpenses.push(newExpense);
-
                 renderExpenses();
-
             } else {
-
-                // 公費模式：寫入雲端 Google Sheet
-                groupExpenses.push(newExpense);
-
-                renderExpenses();
-
-
                 submitBtn.disabled = true;
-
-                submitBtn.textContent = '傳送中...';
-
+                submitBtn.textContent = '同步中...';
 
                 try {
-
                     await fetch(GOOGLE_SCRIPT_URL, {
-
                         method: 'POST',
-
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8',
+                        },
                         body: JSON.stringify({
-
                             action: 'add',
-
                             data: newExpense
-
                         })
-
                     });
 
-
                     await fetchGroupExpenses();
-
                 } catch (err) {
-
                     console.error("新增公費至雲端失敗:", err);
-
                 } finally {
-
                     submitBtn.disabled = false;
-
                     submitBtn.textContent = '+ 新增';
-
                 }
-
             }
 
-
             expenseTitle.value = '';
-
             expenseAmount.value = '';
-
         });
 
 
-        // =========================
         // 刪除記帳
-        // =========================
-
         window.deleteExpense = async function (id) {
-
             if (currentTab === 'personal') {
-
-                personalExpenses = personalExpenses.filter(
-                    item => item.id.toString() !== id.toString()
-                );
-
+                personalExpenses = personalExpenses.filter(item => item.id.toString() !== id.toString());
                 renderExpenses();
-
             } else {
-
-                // 公費模式：從 Google Sheet 刪除
-                groupExpenses = groupExpenses.filter(
-                    item => item.id.toString() !== id.toString()
-                );
-
-                renderExpenses();
-
-
                 try {
-
                     await fetch(GOOGLE_SCRIPT_URL, {
-
                         method: 'POST',
-
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8',
+                        },
                         body: JSON.stringify({
-
                             action: 'delete',
-
                             id: id
-
                         })
-
                     });
 
-
                     await fetchGroupExpenses();
-
                 } catch (err) {
-
                     console.error("刪除雲端公費失敗:", err);
-
                 }
-
             }
-
         };
 
 
-        // =========================
-        // 頁面初次載入
-        // =========================
-
+        // 初次載入
         renderExpenses();
 
     </script>

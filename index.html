@@ -1233,8 +1233,20 @@
         const AUD_TO_TWD_RATE = 22.67;
 
         // 已自動帶入您最新發佈的 Google Apps Script Web App 網址
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZVCfos1-RjfZK-hw6s5C4DFNWPVjqJtVJhVY5GsAStSUK6J8BMzWBlJTsRokPdWElXg/exec';
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxyG86b4z-eETDQ6WdK5oYSr9IlIbDgowreeKfUd9a2Bu0tTA1JsS-0h3qBcshjzxXQdw/exec';
 
+        // 輔助函式：強制轉成 YYYY-MM-DD 純日期格式
+        function formatDateString(dateStr) {
+            if (!dateStr) return '';
+            let str = String(dateStr).trim();
+            // 如果帶有時間字串（如 2026-09-17T16:00:00.000Z），截取 T 前面的日期
+            if (str.includes('T')) {
+                str = str.split('T')[0];
+            }
+            // 正則抓取 YYYY-MM-DD 格式
+            const match = str.match(/^\d{4}-\d{2}-\d{2}/);
+            return match ? match[0] : str;
+        }
 
         // =========================
         // 1. 搜尋過濾功能
@@ -1392,11 +1404,11 @@
             try {
                 const res = await fetch(GOOGLE_SCRIPT_URL);
                 const data = await res.json();
-                
+
                 if (Array.isArray(data)) {
                     groupExpenses = data.map(item => ({
                         id: item.id,
-                        date: item.date,
+                        date: formatDateString(item.date),
                         title: item.title,
                         amount: parseFloat(item.amount) || 0
                     }));
@@ -1458,6 +1470,7 @@
 
                     totalAud += aud;
 
+                    const displayDate = formatDateString(item.date);
 
                     const tr = document.createElement('tr');
 
@@ -1467,7 +1480,7 @@
                     tr.innerHTML = `
 
                         <td class="py-2 px-2 whitespace-nowrap text-slate-500">
-                            ${item.date}
+                            ${displayDate}
                         </td>
 
                         <td class="py-2 px-2 font-medium text-slate-800">
@@ -1536,7 +1549,7 @@
 
                 id: Date.now().toString(),
 
-                date: expenseDate.value,
+                date: formatDateString(expenseDate.value),
 
                 title: expenseTitle.value.trim(),
 

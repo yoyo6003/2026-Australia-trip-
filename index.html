@@ -1232,10 +1232,10 @@
         // 今日 AUD to TWD 參考匯率
         const AUD_TO_TWD_RATE = 22.67;
 
-        // 已為您更新為最新的 Google Apps Script 部署網址
+        // Apps Script 最新部署網址
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzxEHbhj08yYmQKVqrRg0MgpvV-cdugeGMQm9--yJyzH05XlY0YJGE9_TSYFQ54psneRg/exec';
 
-        // 輔助函式：格式化日期為 YYYY-MM-DD
+        // 核心修復：強制將帶有 ISO 時間的日期格式（如 2026-09-17T16:00:00.000Z）轉換截取為純 YYYY-MM-DD
         function formatDateString(dateStr) {
             if (!dateStr) return '';
             let str = String(dateStr).trim();
@@ -1246,11 +1246,13 @@
             return match ? match[0] : str;
         }
 
+
         // 1. 搜尋過濾功能
         const searchInput = document.getElementById('searchInput');
         const dayCards = document.querySelectorAll('.day-card');
         const noResults = document.getElementById('noResults');
         const searchTermText = document.getElementById('searchTermText');
+
 
         searchInput.addEventListener('input', function () {
             const query = this.value.trim().toLowerCase();
@@ -1258,6 +1260,7 @@
 
             dayCards.forEach(card => {
                 const text = card.textContent.toLowerCase();
+
                 if (text.includes(query)) {
                     card.classList.remove('hidden');
                     if (query !== '') {
@@ -1278,7 +1281,7 @@
         });
 
 
-        // 2. 雙 Tab 記帳本
+        // 2. 雙 Tab 記帳本（個人 Local / 公費 Google API）
         let currentTab = 'personal';
 
         let personalExpenses =
@@ -1388,6 +1391,7 @@
                     totalAud += aud;
 
                     const displayDate = formatDateString(item.date);
+
                     const tr = document.createElement('tr');
                     tr.className = 'border-b border-slate-100 hover:bg-slate-50/50';
 
@@ -1400,11 +1404,13 @@
                             <button onclick="deleteExpense('${item.id}')" class="text-rose-400 hover:text-rose-600 transition" title="刪除">🗑️</button>
                         </td>
                     `;
+
                     expenseList.appendChild(tr);
                 });
             }
 
             const totalTwd = Math.round(totalAud * AUD_TO_TWD_RATE);
+
             totalAmountAudEl.textContent = totalAud.toFixed(2);
             totalAmountTwdEl.textContent = totalTwd.toLocaleString();
 
@@ -1414,7 +1420,7 @@
         }
 
 
-        // 新增記帳 (使用 text/plain 防止 CORS 預檢攔截)
+        // 新增記帳 (保持原本可運作的 fetch 發送方式)
         expenseForm.addEventListener('submit', async function (e) {
             e.preventDefault();
 
@@ -1429,15 +1435,15 @@
                 personalExpenses.push(newExpense);
                 renderExpenses();
             } else {
+                groupExpenses.push(newExpense);
+                renderExpenses();
+
                 submitBtn.disabled = true;
-                submitBtn.textContent = '同步中...';
+                submitBtn.textContent = '傳送中...';
 
                 try {
                     await fetch(GOOGLE_SCRIPT_URL, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'text/plain;charset=utf-8',
-                        },
                         body: JSON.stringify({
                             action: 'add',
                             data: newExpense
@@ -1464,12 +1470,12 @@
                 personalExpenses = personalExpenses.filter(item => item.id.toString() !== id.toString());
                 renderExpenses();
             } else {
+                groupExpenses = groupExpenses.filter(item => item.id.toString() !== id.toString());
+                renderExpenses();
+
                 try {
                     await fetch(GOOGLE_SCRIPT_URL, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'text/plain;charset=utf-8',
-                        },
                         body: JSON.stringify({
                             action: 'delete',
                             id: id
@@ -1484,7 +1490,7 @@
         };
 
 
-        // 初次載入
+        // 頁面初次載入
         renderExpenses();
 
     </script>
